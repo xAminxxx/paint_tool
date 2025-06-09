@@ -9,10 +9,10 @@ import app.logger.FileLogger;
 import app.shapes.*;
 import app.shapes.decorators.BorderDecorator;
 import app.shapes.decorators.DashDecorator;
-import app.shapes.decorators.FillDecorator;
 import app.shapes.decorators.ShadowDecorator;
 import app.ui.StatusBar;
 import javafx.application.Application;
+import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -37,7 +37,6 @@ public class DrawingApp extends Application {
     private boolean dashedStyle = false;
     private boolean borderEnabled = false;
     private boolean shadowEnabled = false;
-    private boolean fillEnabled = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -71,29 +70,11 @@ public class DrawingApp extends Application {
     private ToolBar createToolBar() {
         ToolBar toolBar = new ToolBar();
         ToggleGroup shapeGroup = new ToggleGroup();
-        // Options de décoration
-        CheckBox dashCheck = new CheckBox("Pointillés");
-        dashCheck.setOnAction(e -> {
-            dashedStyle = dashCheck.isSelected();
-            logger.log("Style pointillé: " + (dashedStyle ? "activé" : "désactivé"));
-        });
 
-        CheckBox borderCheck = new CheckBox("Bordure épaisse");
-        borderCheck.setOnAction(e -> {
-            borderEnabled = borderCheck.isSelected();
-            logger.log("Bordure épaisse: " + (borderEnabled ? "activée" : "désactivée"));
-        });
+        // === Section Formes ===
+        Label shapeLabel = new Label("Formes:");
+        shapeLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 5 0 5;");
 
-        CheckBox shadowCheck = new CheckBox("Ombre");
-        shadowCheck.setOnAction(e -> {
-            shadowEnabled = shadowCheck.isSelected();
-            logger.log("Ombre: " + (shadowEnabled ? "activée" : "désactivée"));
-        });
-        CheckBox fillCheck = new CheckBox("Remplissage");
-        fillCheck.setOnAction(e -> {
-            fillEnabled = fillCheck.isSelected();
-            logger.log("Remplissage: " + (fillEnabled ? "activé" : "désactivé"));
-        });
         RadioButton rectBtn = new RadioButton("Rectangle");
         rectBtn.setToggleGroup(shapeGroup);
         rectBtn.setSelected(true);
@@ -123,11 +104,51 @@ public class DrawingApp extends Application {
             logger.log("Forme sélectionnée: Triangle");
         });
 
+        // === Section Couleur ===
+        Separator shapeColorSeparator = new Separator(Orientation.VERTICAL);
+
+        Label colorLabel = new Label("Couleur:");
+        colorLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 5 0 5;");
+
         ColorPicker colorPicker = new ColorPicker(currentColor);
+        colorPicker.setPrefWidth(80);
         colorPicker.setOnAction(e -> {
             currentColor = colorPicker.getValue();
             logger.log("Couleur changée: " + currentColor.toString());
         });
+
+        // === Section Effets Décorateurs ===
+        Separator decoratorSeparator = new Separator(Orientation.VERTICAL);
+
+        Label decoratorLabel = new Label("Effets:");
+        decoratorLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 5 0 5;");
+
+        // Option Pointillés
+        CheckBox dashCheck = new CheckBox("Pointillés");
+        dashCheck.setStyle("-fx-font-size: 11px;");
+        dashCheck.setOnAction(e -> {
+            dashedStyle = dashCheck.isSelected();
+            logger.log("Style pointillé: " + (dashedStyle ? "activé" : "désactivé"));
+        });
+
+        // Option Bordure Épaisse
+        CheckBox borderCheck = new CheckBox("Bordure épaisse");
+        borderCheck.setStyle("-fx-font-size: 11px;");
+        borderCheck.setOnAction(e -> {
+            borderEnabled = borderCheck.isSelected();
+            logger.log("Bordure épaisse: " + (borderEnabled ? "activée" : "désactivée"));
+        });
+
+        // Option Ombre
+        CheckBox shadowCheck = new CheckBox("Ombre");
+        shadowCheck.setStyle("-fx-font-size: 11px;");
+        shadowCheck.setOnAction(e -> {
+            shadowEnabled = shadowCheck.isSelected();
+            logger.log("Ombre: " + (shadowEnabled ? "activée" : "désactivée"));
+        });
+
+        // === Section Actions ===
+        Separator actionSeparator = new Separator(Orientation.VERTICAL);
 
         Button clearBtn = new Button("Effacer");
         clearBtn.setOnAction(e -> {
@@ -148,6 +169,12 @@ public class DrawingApp extends Application {
             logger.log("Dessin chargé depuis la base de données");
         });
 
+        // === Section Journalisation ===
+        Separator loggerSeparator = new Separator(Orientation.VERTICAL);
+
+        Label loggerLabel = new Label("Journalisation:");
+        loggerLabel.setStyle("-fx-padding: 0 5 0 5;");
+
         ComboBox<String> loggerCombo = new ComboBox<>();
         loggerCombo.getItems().addAll("Console", "Fichier", "Base de données");
         loggerCombo.setValue("Console");
@@ -167,14 +194,24 @@ public class DrawingApp extends Application {
             logger.log("Stratégie de journalisation changée: " + choice);
         });
 
+        // Ajout de tous les éléments à la barre d'outils
         toolBar.getItems().addAll(
+                // Section Formes
+                shapeLabel,
                 rectBtn, circleBtn, lineBtn, triangleBtn,
-                new Separator(),
-                new Label("Couleur:"), colorPicker,
-                new Separator(),
+                shapeColorSeparator,
+                // Section Couleur
+                colorLabel, colorPicker,
+                decoratorSeparator,
+                // Section Effets
+                decoratorLabel,
+                dashCheck, borderCheck, shadowCheck,
+                actionSeparator,
+                // Section Actions
                 clearBtn, saveBtn, loadBtn,
-                new Separator(),
-                new Label("Journalisation:"), loggerCombo
+                loggerSeparator,
+                // Section Journalisation
+                loggerLabel, loggerCombo
         );
 
         return toolBar;
@@ -188,14 +225,16 @@ public class DrawingApp extends Application {
             startX[0] = e.getX();
             startY[0] = e.getY();
         });
+
         drawingCanvas.setOnMouseDragged(e -> {
             double endX = e.getX();
             double endY = e.getY();
 
-            // Create a temporary shape
+            // Créer une forme temporaire
             Shape tempShape = ShapeFactory.createShape(selectedShape, startX[0], startY[0], endX, endY, currentColor);
 
             if (tempShape != null) {
+                // Appliquer les décorateurs
                 if (dashedStyle) {
                     tempShape = new DashDecorator(tempShape, 10.0, 5.0);
                 }
@@ -205,14 +244,12 @@ public class DrawingApp extends Application {
                 if (shadowEnabled) {
                     tempShape = new ShadowDecorator(tempShape, Color.GRAY, 3.0);
                 }
-                if (fillEnabled) {
-                    tempShape = new FillDecorator(tempShape, currentColor.deriveColor(0, 1, 1, 0.5), 0.5);
-                }
 
                 previewShape = tempShape;
                 redrawCanvas();
             }
         });
+
         drawingCanvas.setOnMouseReleased(e -> {
             double endX = e.getX();
             double endY = e.getY();
@@ -220,6 +257,7 @@ public class DrawingApp extends Application {
             Shape shape = ShapeFactory.createShape(selectedShape, startX[0], startY[0], endX, endY, currentColor);
 
             if (shape != null) {
+                // Appliquer les décorateurs
                 if (dashedStyle) {
                     shape = new DashDecorator(shape, 10.0, 5.0);
                 }
@@ -229,12 +267,9 @@ public class DrawingApp extends Application {
                 if (shadowEnabled) {
                     shape = new ShadowDecorator(shape, Color.GRAY, 3.0);
                 }
-                if (fillEnabled) {
-                    shape = new FillDecorator(shape, currentColor.deriveColor(0, 1, 1, 0.5), 0.5);
-                }
 
                 new DrawCommand(this, shape).execute();
-                logger.log("Forme dessinée: " + selectedShape);
+                logger.log("Forme dessinée: " + selectedShape + " avec effets");
             }
 
             previewShape = null;
@@ -247,6 +282,16 @@ public class DrawingApp extends Application {
         gc.fillRect(0, 0, drawingCanvas.getWidth(), drawingCanvas.getHeight());
         gc.setStroke(Color.BLACK);
         gc.strokeRect(0, 0, drawingCanvas.getWidth(), drawingCanvas.getHeight());
+    }
+
+    private void redrawCanvas() {
+        clearCanvas();
+        for (Shape shape : shapes) {
+            shape.draw(gc);
+        }
+        if (previewShape != null) {
+            previewShape.draw(gc);
+        }
     }
 
     public void drawShape(Shape shape) {
@@ -300,16 +345,6 @@ public class DrawingApp extends Application {
             }
         } catch (Exception e) {
             showAlert("Erreur de chargement", "Erreur lors du chargement: " + e.getMessage());
-        }
-    }
-
-    private void redrawCanvas() {
-        clearCanvas();
-        for (Shape shape : shapes) {
-            shape.draw(gc);
-        }
-        if (previewShape != null) {
-            previewShape.draw(gc);
         }
     }
 

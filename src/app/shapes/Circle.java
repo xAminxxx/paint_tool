@@ -5,7 +5,7 @@ import javafx.scene.paint.Color;
 
 public class Circle implements Shape {
 
-    private double x1, y1, x2, y2;
+    public double x1, y1, x2, y2;
     private Color color;
 
     public Circle(double x1, double y1, double x2, double y2, Color color) {
@@ -16,9 +16,13 @@ public class Circle implements Shape {
         this.color = color;
     }
 
+    private double getRadius() {
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
     @Override
     public void draw(GraphicsContext gc) {
-        double radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        double radius = getRadius();
         gc.setStroke(color);
         gc.strokeOval(x1 - radius, y1 - radius, radius * 2, radius * 2);
     }

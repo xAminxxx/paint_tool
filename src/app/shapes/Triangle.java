@@ -5,7 +5,7 @@ import javafx.scene.paint.Color;
 
 public class Triangle implements Shape {
 
-    private double x1, y1, x2, y2;
+    public double x1, y1, x2, y2;
     private Color color;
 
     public Triangle(double x1, double y1, double x2, double y2, Color color) {
@@ -16,29 +16,22 @@ public class Triangle implements Shape {
         this.color = color;
     }
 
+    private double[] getXPoints() {
+        double width = Math.abs(x2 - x1);
+        double minX = Math.min(x1, x2);
+        return new double[]{minX + width / 2, minX, minX + width};
+    }
+
+    private double[] getYPoints() {
+        double height = Math.abs(y2 - y1);
+        double minY = Math.min(y1, y2);
+        return new double[]{minY, minY + height, minY + height};
+    }
+
     @Override
     public void draw(GraphicsContext gc) {
         gc.setStroke(color);
-
-        // Calcul des points du triangle
-        double width = Math.abs(x2 - x1);
-        double height = Math.abs(y2 - y1);
-        double minX = Math.min(x1, x2);
-        double minY = Math.min(y1, y2);
-
-        double[] xPoints = {
-            minX + width / 2, // Sommet supérieur
-            minX, // Coin inférieur gauche
-            minX + width // Coin inférieur droit
-        };
-
-        double[] yPoints = {
-            minY, // Sommet supérieur
-            minY + height, // Coin inférieur gauche
-            minY + height // Coin inférieur droit
-        };
-
-        gc.strokePolygon(xPoints, yPoints, 3);
+        gc.strokePolygon(getXPoints(), getYPoints(), 3);
     }
 
     @Override
