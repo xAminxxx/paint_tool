@@ -67,6 +67,37 @@ public class DrawingApp extends Application {
         primaryStage.show();
     }
 
+    private void showLogs() {
+        List<String> logs = DatabaseLogger.getLogs();
+        if (logs.isEmpty()) {
+            showAlert("Journaux", "Aucun journal enregistré dans la base de données.");
+            return;
+        }
+
+        // Création d'une fenêtre de dialogue pour afficher les logs
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Journaux de la base de données");
+        dialog.setHeaderText("Liste des actions journalisées:");
+
+        // Création d'une zone de texte pour afficher les logs
+        TextArea textArea = new TextArea();
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefSize(600, 400);
+
+        // Remplissage de la zone de texte avec les logs
+        StringBuilder sb = new StringBuilder();
+        for (String log : logs) {
+            sb.append(log).append("\n");
+        }
+        textArea.setText(sb.toString());
+
+        // Ajout à la boîte de dialogue
+        dialog.getDialogPane().setContent(textArea);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
+
     private ToolBar createToolBar() {
         ToolBar toolBar = new ToolBar();
         ToggleGroup shapeGroup = new ToggleGroup();
@@ -168,6 +199,11 @@ public class DrawingApp extends Application {
             loadDrawing();
             logger.log("Dessin chargé depuis la base de données");
         });
+        Button showLogsBtn = new Button("Afficher Journaux");
+        showLogsBtn.setOnAction(e -> {
+            showLogs();
+            logger.log("Affichage des journaux demandé");
+        });
 
         // === Section Journalisation ===
         Separator loggerSeparator = new Separator(Orientation.VERTICAL);
@@ -210,6 +246,7 @@ public class DrawingApp extends Application {
                 // Section Actions
                 clearBtn, saveBtn, loadBtn,
                 loggerSeparator,
+                showLogsBtn,
                 // Section Journalisation
                 loggerLabel, loggerCombo
         );
